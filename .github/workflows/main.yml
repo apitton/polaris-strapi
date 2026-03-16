@@ -64,7 +64,6 @@ jobs:
           port: 22
           script: |
             set -e
-
             APP_DIR=$HOME/ec2-user/strapi
             ARCHIVE=$APP_DIR/strapi-build.tar.gz
 
