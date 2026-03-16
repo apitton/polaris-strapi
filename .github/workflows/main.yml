@@ -64,7 +64,7 @@ jobs:
           port: 22
           script: |
             set -e
-            APP_DIR=home/ec2-user/strapi
+            APP_DIR=~/ec2-user/strapi
             echo "app dir $APP_DIR"
             ARCHIVE=$APP_DIR/strapi-build.tar.gz
             echo "archive $ARCHIVE"
