@@ -3,7 +3,7 @@ import type { Core } from '@strapi/strapi';
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Server => ({
   host: env('HOST', '0.0.0.0'),
   port: env.int('PORT', 1337),
-  url: env('PUBLIC_URL', 'https://www.polaris-ds.com/strapi/admin'), // your CloudFront URL + path
+  url: env('PUBLIC_URL', 'http://www.polaris-ds.com/strapi'), // your CloudFront URL + path
   proxy: true,
   app: {
     keys: env.array('APP_KEYS'),
