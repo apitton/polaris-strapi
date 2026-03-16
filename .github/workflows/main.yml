@@ -18,21 +18,21 @@ jobs:
         uses: actions/checkout@v5
 
       # 2️⃣ Setup Node 20
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
+  #    - name: Setup Node
+  #      uses: actions/setup-node@v4
+  #      with:
+  #        node-version: 20
+  #        cache: npm
 
        # 3️⃣ Install dependencies locally
-      - name: Install dependencies
-        run: npm ci
+  #    - name: Install dependencies
+  #      run: npm ci
 
       # 4️⃣ Build the Strapi admin panel locally
-      - name: Build Strapi admin
-        run: npm run build
+  #    - name: Build Strapi admin
+  #      run: npm run build
 
-      # 5️⃣ Create deployment archive outside project folder
+  #    # 5️⃣ Create deployment archive outside project folder
       - name: Prepare deploy bundle
         run: |
           mkdir -p deploy
@@ -56,43 +56,39 @@ jobs:
 
       # 7️⃣ Deploy on EC2
       - name: Deploy on EC2
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@v1.2.2        # consider upgrading to ~v1.0.3+ if possible
         with:
-          # ...
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
             set -e
 
             APP_DIR="$HOME/strapi"
-            ARCHIVE="$APP_DIR/strapi-build.tar.gz"     # ← fixed
+            ARCHIVE="$APP_DIR/strapi-build.tar.gz"
 
             echo "app dir    : $APP_DIR"
             echo "archive path: $ARCHIVE"
 
-            # Clean broken attempts (good to keep)
-            rm -rf "$APP_DIR/strapi-build.tar.gz" \
-                   "$APP_DIR/deploy"               # in case old runs left junk
+            # ─── Clean previous failed attempts ───
+            rm -rf "$APP_DIR/strapi-build.tar.gz"   # remove directory if exists
 
             mkdir -p "$APP_DIR"
             cd "$APP_DIR"
 
-            # Better debug
-            echo "Content before unpack:"
+            # Debug what arrived
             ls -la .
-            du -sh . || true
 
             if [ ! -f "$ARCHIVE" ]; then
-              echo "ERROR: Archive not found at expected path!"
-              ls -la "$APP_DIR" || true
-              find "$APP_DIR" -maxdepth 2 -ls || true
+              echo "ERROR: Deployment archive not found!"
+              echo "Content of $APP_DIR:"
+              ls -alh "$APP_DIR"
+              find "$APP_DIR" -maxdepth 2 -ls
               exit 9
             fi
 
-            echo "Archive found — size: $(du -h "$ARCHIVE" | cut -f1)"
-            file "$ARCHIVE" || echo "(file command failed)"
-
-            # Unpack (uncomment when ready)
-            # tar -xzf "$ARCHIVE" --strip-components=1
+            echo "Archive looks good — continuing..."
+            # tar -xzf "$ARCHIVE" --strip-components=1   # or however you unpack
             # rm -f "$ARCHIVE"
-
-            # Your restart logic here...
-            echo "Deployment would continue here..."
+            # pm2 restart strapi   # or docker-compose up -d, systemctl restart, etc.
