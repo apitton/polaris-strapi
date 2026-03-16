@@ -18,21 +18,21 @@ jobs:
         uses: actions/checkout@v5
 
       # 2️⃣ Setup Node 20
-  #    - name: Setup Node
-  #      uses: actions/setup-node@v4
-  #      with:
-  #        node-version: 20
-  #        cache: npm
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
        # 3️⃣ Install dependencies locally
-  #    - name: Install dependencies
-  #      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
       # 4️⃣ Build the Strapi admin panel locally
-  #    - name: Build Strapi admin
-  #      run: npm run build
+      - name: Build Strapi admin
+        run: npm run build
 
-  #    # 5️⃣ Create deployment archive outside project folder
+      # 5️⃣ Create deployment archive outside project folder
       - name: Prepare deploy bundle
         run: |
           mkdir -p deploy
@@ -66,7 +66,7 @@ jobs:
             set -e
 
             APP_DIR="$HOME/strapi"
-            ARCHIVE="$APP_DIR/strapi-build.tar.gz"
+            ARCHIVE="$APP_DIR/deploy/strapi-build.tar.gz"
 
             echo "app dir    : $APP_DIR"
             echo "archive path: $ARCHIVE"
@@ -81,7 +81,7 @@ jobs:
             ls -la .
 
             if [ ! -f "$ARCHIVE" ]; then
-              echo "ERROR : Deployment archive not found!"
+              echo "ERROR: Deployment archive not found!"
               echo "Content of $APP_DIR:"
               ls -alh "$APP_DIR"
               find "$APP_DIR" -maxdepth 2 -ls
