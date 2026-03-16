@@ -65,7 +65,7 @@ jobs:
           script: |
             set -e
 
-            APP_DIR="$HOME/strapi"
+            APP_DIR="$HOME/strapi/deploy"
             ARCHIVE="$APP_DIR/strapi-build.tar.gz"
 
             echo "app dir    : $APP_DIR"
