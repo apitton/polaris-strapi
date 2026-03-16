@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy Strapi Built App to EC2
 
 on:
   push:
@@ -16,7 +16,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Deploy via SSH
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Strapi admin
+        run: npm run build
+
+      - name: Create deployment archive
+        run: |
+          tar --exclude='.git' \
+              --exclude='node_modules' \
+              --exclude='.github' \
+              --exclude='.gitignore' \
+              -czf strapi-build.tar.gz .
+
+      - name: Copy archive to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "strapi-build.tar.gz"
+          target: "/home/${{ secrets.EC2_USER }}/"
+
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -24,8 +54,23 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            cd ~/strapi
-            git pull origin main
-            npm ci || npm install
-            npm run build
+            set -e
+
+            APP_DIR=/home/${{ secrets.EC2_USER }}/strapi
+            ARCHIVE=/home/${{ secrets.EC2_USER }}/strapi-build.tar.gz
+
+            mkdir -p $APP_DIR
+            cd $APP_DIR
+
+            find $APP_DIR -mindepth 1 -maxdepth 1 \
+              ! -name '.env' \
+              ! -name 'public' \
+              -exec rm -rf {} +
+
+            tar -xzf $ARCHIVE -C $APP_DIR
+            rm -f $ARCHIVE
+
+            npm ci --omit=dev
+
             pm2 restart strapi || pm2 start npm --name strapi -- start
+            pm2 save
