@@ -1,0 +1,70 @@
+name: Deploy Strapi to EC2 (Build on Server)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Create deployment archive
+        run: |
+          mkdir -p deploy
+          tar \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='deploy' \
+            --exclude='.github' \
+            -czf deploy/strapi-source.tar.gz .
+
+      - name: Upload source to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "deploy/strapi-source.tar.gz"
+          target: "/home/ec2-user/"
+
+      - name: Build and start Strapi on EC2
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            APP_DIR="/home/ec2-user/strapi"
+            ARCHIVE="/home/ec2-user/strapi-source.tar.gz"
+
+            echo "Deploying Strapi..."
+
+            mkdir -p "$APP_DIR"
+            cd "$APP_DIR"
+
+            pm2 stop strapi || true
+            pm2 delete strapi || true
+
+            find "$APP_DIR" -mindepth 1 -maxdepth 1 ! -name '.env' -exec rm -rf {} +
+
+            tar -xzf "$ARCHIVE" -C "$APP_DIR"
+            rm -f "$ARCHIVE"
+
+            chown -R ec2-user:ec2-user "$APP_DIR" || true
+
+            npm ci --omit=dev --no-audit --no-fund
+            npm run build
+
+            pm2 start npm --name strapi -- start
+            pm2 save
+
+            echo "Deployment complete"
