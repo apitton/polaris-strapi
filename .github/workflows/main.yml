@@ -56,7 +56,7 @@ jobs:
 
       # 7️⃣ Deploy on EC2
       - name: Deploy on EC2
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@v1.2.2        # consider upgrading to ~v1.0.3+ if possible
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
@@ -64,30 +64,31 @@ jobs:
           port: 22
           script: |
             set -e
-            APP_DIR=$HOME/strapi/deploy
-            echo "app dir $APP_DIR"
-            ARCHIVE=$APP_DIR/strapi-build.tar.gz
-            echo "archive $ARCHIVE"
 
-            mkdir -p $APP_DIR
-            cd $APP_DIR
+            APP_DIR="$HOME/strapi"
+            ARCHIVE="$APP_DIR/strapi-build.tar.gz"
+
+            echo "app dir    : $APP_DIR"
+            echo "archive path: $ARCHIVE"
+
+            # ─── Clean previous failed attempts ───
+            rm -rf "$APP_DIR/strapi-build.tar.gz"   # remove directory if exists
+
+            mkdir -p "$APP_DIR"
+            cd "$APP_DIR"
+
+            # Debug what arrived
+            ls -la .
 
             if [ ! -f "$ARCHIVE" ]; then
-              echo "ERROR: Deployment archive not found at $ARCHIVE"
-              ls -alh $APP_DIR   # debug: list files
-              exit 1
+              echo "ERROR: Deployment archive not found!"
+              echo "Content of $APP_DIR:"
+              ls -alh "$APP_DIR"
+              find "$APP_DIR" -maxdepth 2 -ls
+              exit 9
             fi
 
-            # Clean previous files, keep .env
-            find $APP_DIR -mindepth 1 -maxdepth 1 \
-              ! -name '.env' \
-              -exec rm -rf {} +
-
-            # Unpack archive
-            tar -xzf $ARCHIVE
-            rm -f $ARCHIVE
-
-            npm ci --omit=dev || npm ci
-
-            pm2 restart strapi || pm2 start npm --name strapi -- start
-            pm2 save
+            echo "Archive looks good — continuing..."
+            # tar -xzf "$ARCHIVE" --strip-components=1   # or however you unpack
+            # rm -f "$ARCHIVE"
+            # pm2 restart strapi   # or docker-compose up -d, systemctl restart, etc.
