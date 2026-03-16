@@ -52,7 +52,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           source: "deploy/strapi-build.tar.gz"
-          target: "/home/ec2-user/strapi"
+          target: "/home/ec2-user/strapi/"
 
       # 7️⃣ Deploy on EC2
       - name: Deploy on EC2
@@ -65,7 +65,7 @@ jobs:
           script: |
             set -e
 
-            APP_DIR="$HOME/strapi/deploy"
+            APP_DIR="$HOME/strapi"
             ARCHIVE="$APP_DIR/strapi-build.tar.gz"
 
             echo "app dir    : $APP_DIR"
