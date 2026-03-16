@@ -89,6 +89,6 @@ jobs:
             fi
 
             echo "Archive looks good — continuing..."
-            # tar -xzf "$ARCHIVE" --strip-components=1   # or however you unpack
-            # rm -f "$ARCHIVE"
-            # pm2 restart strapi   # or docker-compose up -d, systemctl restart, etc.
+            tar -xzf "$ARCHIVE" --strip-components=1   # or however you unpack
+            rm -f "$ARCHIVE"
+            pm2 restart strapi   # or docker-compose up -d, systemctl restart, etc.
