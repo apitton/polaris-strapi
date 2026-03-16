@@ -65,7 +65,7 @@ jobs:
           script: |
             set -e
 
-            APP_DIR=$HOME/strapi
+            APP_DIR=$HOME/ec2-user/strapi
             ARCHIVE=$APP_DIR/strapi-build.tar.gz
 
             mkdir -p $APP_DIR
