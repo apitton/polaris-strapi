@@ -91,4 +91,5 @@ jobs:
             echo "Archive looks good — continuing..."
             tar -xzf "$ARCHIVE" --strip-components=1   # or however you unpack
             rm -f "$ARCHIVE"
+            npm ci --omit=dev
             pm2 restart strapi   # or docker-compose up -d, systemctl restart, etc.
