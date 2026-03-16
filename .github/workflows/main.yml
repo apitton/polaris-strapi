@@ -28,13 +28,15 @@ jobs:
       - name: Build Strapi admin
         run: npm run build
 
-      - name: Create deployment archive
+      - name: Prepare deploy bundle
         run: |
+          mkdir -p deploy
           tar --exclude='.git' \
               --exclude='node_modules' \
               --exclude='.github' \
               --exclude='.gitignore' \
-              -czf strapi-build.tar.gz .
+              --exclude='deploy' \
+              -czf deploy/strapi-build.tar.gz .
 
       - name: Copy archive to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -43,7 +45,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          source: "strapi-build.tar.gz"
+          source: "deploy/strapi-build.tar.gz"
           target: "/home/${{ secrets.EC2_USER }}/"
 
       - name: Deploy on EC2
@@ -64,13 +66,12 @@ jobs:
 
             find $APP_DIR -mindepth 1 -maxdepth 1 \
               ! -name '.env' \
-              ! -name 'public' \
               -exec rm -rf {} +
 
             tar -xzf $ARCHIVE -C $APP_DIR
             rm -f $ARCHIVE
 
-            npm ci --omit=dev
+            npm ci --omit=dev || npm ci
 
             pm2 restart strapi || pm2 start npm --name strapi -- start
             pm2 save
