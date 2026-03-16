@@ -56,39 +56,43 @@ jobs:
 
       # 7️⃣ Deploy on EC2
       - name: Deploy on EC2
-        uses: appleboy/ssh-action@v1.2.2        # consider upgrading to ~v1.0.3+ if possible
+        uses: appleboy/ssh-action@v1.2.2
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
+          # ...
           script: |
             set -e
 
             APP_DIR="$HOME/strapi"
-            ARCHIVE="$APP_DIR/deploy/strapi-build.tar.gz"
+            ARCHIVE="$APP_DIR/strapi-build.tar.gz"     # ← fixed
 
             echo "app dir    : $APP_DIR"
             echo "archive path: $ARCHIVE"
 
-            # ─── Clean previous failed attempts ───
-            rm -rf "$APP_DIR/strapi-build.tar.gz"   # remove directory if exists
+            # Clean broken attempts (good to keep)
+            rm -rf "$APP_DIR/strapi-build.tar.gz" \
+                   "$APP_DIR/deploy"               # in case old runs left junk
 
             mkdir -p "$APP_DIR"
             cd "$APP_DIR"
 
-            # Debug what arrived
+            # Better debug
+            echo "Content before unpack:"
             ls -la .
+            du -sh . || true
 
             if [ ! -f "$ARCHIVE" ]; then
-              echo "ERROR: Deployment archive not found!"
-              echo "Content of $APP_DIR:"
-              ls -alh "$APP_DIR"
-              find "$APP_DIR" -maxdepth 2 -ls
+              echo "ERROR: Archive not found at expected path!"
+              ls -la "$APP_DIR" || true
+              find "$APP_DIR" -maxdepth 2 -ls || true
               exit 9
             fi
 
-            echo "Archive looks good — continuing..."
-            # tar -xzf "$ARCHIVE" --strip-components=1   # or however you unpack
+            echo "Archive found — size: $(du -h "$ARCHIVE" | cut -f1)"
+            file "$ARCHIVE" || echo "(file command failed)"
+
+            # Unpack (uncomment when ready)
+            # tar -xzf "$ARCHIVE" --strip-components=1
             # rm -f "$ARCHIVE"
-            # pm2 restart strapi   # or docker-compose up -d, systemctl restart, etc.
+
+            # Your restart logic here...
+            echo "Deployment would continue here..."
