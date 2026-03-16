@@ -81,7 +81,7 @@ jobs:
             ls -la .
 
             if [ ! -f "$ARCHIVE" ]; then
-              echo "ERROR: Deployment archive not found!"
+              echo "ERROR : Deployment archive not found!"
               echo "Content of $APP_DIR:"
               ls -alh "$APP_DIR"
               find "$APP_DIR" -maxdepth 2 -ls
