@@ -44,7 +44,7 @@ jobs:
             set -e
 
             APP_DIR="/home/ec2-user/strapi"
-            ARCHIVE="/home/ec2-user/strapi-source.tar.gz"
+            ARCHIVE="/home/ec2-user/deploy/strapi-source.tar.gz"
 
             echo "Deploying Strapi..."
 
