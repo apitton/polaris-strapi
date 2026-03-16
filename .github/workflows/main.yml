@@ -52,7 +52,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           source: "deploy/strapi-build.tar.gz"
-          target: "/home/ec2-user/strsapi/strapi-build.tar.gz"
+          target: "/home/ec2-user/strapi/strapi-build.tar.gz"
 
       # 7️⃣ Deploy on EC2
       - name: Deploy on EC2
