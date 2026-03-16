@@ -52,7 +52,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           source: "deploy/strapi-build.tar.gz"
-          target: "/home/ec2-user/strapi-build.tar.gz"
+          target: "/home/ec2-user/strsapi/strapi-build.tar.gz"
 
       # 7️⃣ Deploy on EC2
       - name: Deploy on EC2
@@ -65,32 +65,28 @@ jobs:
           script: |
             set -e
 
-            # Paths
-            APP_DIR=/home/${{ secrets.EC2_USER }}/strapi
-            ARCHIVE=/home/${{ secrets.EC2_USER }}/strapi-build.tar.gz
+            APP_DIR=$HOME/strapi
+            ARCHIVE=$APP_DIR/strapi-build.tar.gz
 
-            # Make sure the directory exists
             mkdir -p $APP_DIR
             cd $APP_DIR
 
-            # Verify archive exists
             if [ ! -f "$ARCHIVE" ]; then
               echo "ERROR: Deployment archive not found at $ARCHIVE"
+              ls -alh $APP_DIR   # debug: list files
               exit 1
             fi
 
-            # Clean previous files, except .env
+            # Clean previous files, keep .env
             find $APP_DIR -mindepth 1 -maxdepth 1 \
               ! -name '.env' \
               -exec rm -rf {} +
 
-            # Unpack the archive
-            tar -xzf $ARCHIVE -C $APP_DIR
+            # Unpack archive
+            tar -xzf $ARCHIVE
             rm -f $ARCHIVE
 
-            # Install only production dependencies
             npm ci --omit=dev || npm ci
 
-            # Restart Strapi with pm2
             pm2 restart strapi || pm2 start npm --name strapi -- start
             pm2 save
